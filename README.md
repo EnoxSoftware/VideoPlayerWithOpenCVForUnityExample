@@ -9,7 +9,7 @@ Screen Shot
 Environment
 -----
 * Unity 5.6.0f3
-* OpenCV for Unity 2.1.6  
+* [OpenCV for Unity](https://assetstore.unity.com/packages/tools/integration/opencv-for-unity-21088?aid=1011l4ehR) 2.1.6  
 
 
 Setup
