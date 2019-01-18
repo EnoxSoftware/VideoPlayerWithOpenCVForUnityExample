@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using OpenCVForUnity.CoreModule;
+using OpenCVForUnity.ImgprocModule;
+using OpenCVForUnity.UnityUtils;
+
 
 #if UNITY_5_3 || UNITY_5_3_OR_NEWER
 using UnityEngine.SceneManagement;
@@ -69,9 +73,9 @@ namespace OpenCVForUnityExample
 //                Utils.texture2DToMat(videoTexture, rgbaMat);
                 Utils.fastTexture2DToMat (videoTexture, rgbaMat);
 
-                Imgproc.putText (rgbaMat, "VideoPlayer With OpenCV for Unity Example", new Point (100, rgbaMat.rows () / 2), Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 0, 0, 255), 5, Imgproc.LINE_AA, false);
+                Imgproc.putText (rgbaMat, "VideoPlayer With OpenCV for Unity Example", new Point (100, rgbaMat.rows () / 2), Imgproc.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 0, 0, 255), 5, Imgproc.LINE_AA, false);
 
-                Imgproc.putText (rgbaMat, "width:" + rgbaMat.width () + " height:" + rgbaMat.height () + " frame:" + videoPlayer.frame, new Point (5, rgbaMat.rows () - 10), Core.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 255, 255, 255), 5, Imgproc.LINE_AA, false);
+                Imgproc.putText (rgbaMat, "width:" + rgbaMat.width () + " height:" + rgbaMat.height () + " frame:" + videoPlayer.frame, new Point (5, rgbaMat.rows () - 10), Imgproc.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 255, 255, 255), 5, Imgproc.LINE_AA, false);
 
 //                Utils.matToTexture2D (rgbaMat, texture, colors);
                 Utils.fastMatToTexture2D (rgbaMat, texture);
