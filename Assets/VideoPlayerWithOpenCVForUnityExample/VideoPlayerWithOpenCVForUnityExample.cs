@@ -1,101 +1,93 @@
-﻿using UnityEngine;
-using System.Collections;
-using OpenCVForUnity.CoreModule;
-using OpenCVForUnity.ImgprocModule;
-using OpenCVForUnity.UnityUtils;
-
-
-#if UNITY_5_3 || UNITY_5_3_OR_NEWER
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
-#endif
-using OpenCVForUnity;
+using UnityEngine.UI;
 
-using UnityEngine.Video;
-
-namespace OpenCVForUnityExample
+namespace ARFoundationWithOpenCVForUnityExample
 {
-    /// <summary>
-    /// VideoCapture example.
-    /// </summary>
+
     public class VideoPlayerWithOpenCVForUnityExample : MonoBehaviour
     {
-        /// <summary>
-        /// The video player.
-        /// </summary>
-        VideoPlayer videoPlayer;
 
-        /// <summary>
-        /// The rgba mat.
-        /// </summary>
-        Mat rgbaMat;
+        [Header("UI")]
+        public Text exampleTitle;
+        public Text versionInfo;
+        public ScrollRect scrollRect;
+        private static float verticalNormalizedPosition = 1f;
 
-        /// <summary>
-        /// The colors.
-        /// </summary>
-        Color32[] colors;
-
-        /// <summary>
-        /// The texture.
-        /// </summary>
-        Texture2D texture;
-
-        /// <summary>
-        /// The video texture.
-        /// </summary>
-        Texture2D videoTexture;
-        
-        // Use this for initialization
-        void Start ()
+        void Awake()
         {
-            videoPlayer = GetComponent<VideoPlayer> ();
-
-            int width = (int)videoPlayer.clip.width;
-            int height = (int)videoPlayer.clip.height;
-
-            colors = new Color32[width * height];
-            texture = new Texture2D (width, height, TextureFormat.RGBA32, false);
-            rgbaMat = new Mat (height, width, CvType.CV_8UC4);
-
-            videoTexture = new Texture2D (width, height, TextureFormat.RGBA32, false);
-
-            videoPlayer.Play ();
-
-            gameObject.GetComponent<Renderer> ().material.mainTexture = texture;
-        }
-            
-        // Update is called once per frame
-        void Update ()
-        {
-            if (videoPlayer.isPlaying && videoPlayer.texture != null) {
-               
-                Utils.textureToTexture2D (videoPlayer.texture, videoTexture);
-
-//                Utils.texture2DToMat(videoTexture, rgbaMat);
-                Utils.fastTexture2DToMat (videoTexture, rgbaMat);
-
-                Imgproc.putText (rgbaMat, "VideoPlayer With OpenCV for Unity Example", new Point (100, rgbaMat.rows () / 2), Imgproc.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 0, 0, 255), 5, Imgproc.LINE_AA, false);
-
-                Imgproc.putText (rgbaMat, "width:" + rgbaMat.width () + " height:" + rgbaMat.height () + " frame:" + videoPlayer.frame, new Point (5, rgbaMat.rows () - 10), Imgproc.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar (255, 255, 255, 255), 5, Imgproc.LINE_AA, false);
-
-//                Utils.matToTexture2D (rgbaMat, texture, colors);
-                Utils.fastMatToTexture2D (rgbaMat, texture);
-            }
+            //QualitySettings.vSyncCount = 0;
+            //Application.targetFrameRate = 60;
         }
 
-        void OnDestroy ()
+        IEnumerator Start()
         {
 
-            if (rgbaMat != null)
-                rgbaMat.Dispose ();
+            exampleTitle.text = "VideoPlayerWithOpenCVForUnity Example " + Application.version;
+
+            versionInfo.text = OpenCVForUnity.CoreModule.Core.NATIVE_LIBRARY_NAME + " " + OpenCVForUnity.UnityUtils.Utils.getVersion() + " (" + OpenCVForUnity.CoreModule.Core.VERSION + ")";
+            versionInfo.text += " / UnityEditor " + Application.unityVersion;
+            versionInfo.text += " / ";
+#if UNITY_EDITOR
+            versionInfo.text += "Editor";
+#elif UNITY_STANDALONE_WIN
+            versionInfo.text += "Windows";
+#elif UNITY_STANDALONE_OSX
+            versionInfo.text += "Mac OSX";
+#elif UNITY_STANDALONE_LINUX
+            versionInfo.text += "Linux";
+#elif UNITY_ANDROID
+            versionInfo.text += "Android";
+#elif UNITY_IOS
+            versionInfo.text += "iOS";
+#elif UNITY_WSA
+            versionInfo.text += "WSA";
+#elif UNITY_WEBGL
+            versionInfo.text += "WebGL";
+#endif
+            versionInfo.text += " ";
+#if ENABLE_MONO
+            versionInfo.text += "Mono";
+#elif ENABLE_IL2CPP
+            versionInfo.text += "IL2CPP";
+#elif ENABLE_DOTNET
+            versionInfo.text += ".NET";
+#endif
+
+            scrollRect.verticalNormalizedPosition = verticalNormalizedPosition;
+
+
+            yield break;
         }
 
-        public void OnBackButton ()
+        public void OnScrollRectValueChanged()
         {
-            #if UNITY_5_3 || UNITY_5_3_OR_NEWER
-            SceneManager.LoadScene ("OpenCVForUnityExample");
-            #else
-            Application.LoadLevel ("OpenCVForUnityExample");
-            #endif
+            verticalNormalizedPosition = scrollRect.verticalNormalizedPosition;
+        }
+
+        public void OnShowSystemInfoButtonClick()
+        {
+            SceneManager.LoadScene("ShowSystemInfo");
+        }
+
+        public void OnShowLicenseButtonClick()
+        {
+            SceneManager.LoadScene("ShowLicense");
+        }
+
+        public void OnVideoPlayerOnlyExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoPlayerOnlyExample");
+        }
+
+        public void OnVideoPlayerWithOpenCVForUnitySyncExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoPlayerWithOpenCVForUnitySyncExample");
+        }
+        public void OnVideoPlayerWithOpenCVForUnityAsyncExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoPlayerWithOpenCVForUnityAsyncExample");
         }
     }
 }
