@@ -1,11 +1,7 @@
-﻿using OpenCVForUnity.CoreModule;
+using OpenCVForUnity.CoreModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.UnityUtils;
-using OpenCVForUnity.UtilsModule;
-using System;
-using System.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -22,6 +18,36 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// VIDEO_FILENAME
         /// </summary>
         public string VIDEO_FILENAME;
+
+        /// <summary>
+        /// The video path input field.
+        /// </summary>
+        public InputField videoPathInputField;
+
+        /// <summary>
+        /// The play button.
+        /// </summary>
+        public Button PlayButton;
+
+        /// <summary>
+        /// The pause button.
+        /// </summary>
+        public Button PauseButton;
+
+        /// <summary>
+        /// The stop button.
+        /// </summary>
+        public Button StopButton;
+
+        /// <summary>
+        /// Determines if applies the comic filter.
+        /// </summary>
+        public bool applyComicFilter;
+
+        /// <summary>
+        /// The apply comic filter toggle.
+        /// </summary>
+        public Toggle applyComicFilterToggle;
 
         /// <summary>
         /// The video player.
@@ -44,45 +70,24 @@ namespace VideoPlayerWithOpenCVForUnityExample
         Texture2D videoTexture;
 
         /// <summary>
-        /// The video path input field.
-        /// </summary>
-        public InputField videoPathInputField;
-
-        /// <summary>
-        /// The play button.
-        /// </summary>
-        public Button PlayButton;
-
-        /// <summary>
-        /// The stop button.
-        /// </summary>
-        public Button StopButton;
-
-        /// <summary>
-        /// Determines if applies the comic filter.
-        /// </summary>
-        public bool applyComicFilter;
-
-        /// <summary>
-        /// The apply comic filter toggle.
-        /// </summary>
-        public Toggle applyComicFilterToggle;
-
-        /// <summary>
         /// comicFilter
         /// </summary>
         ComicFilter comicFilter;
 
+        /// <summary>
+        /// The FPS monitor.
+        /// </summary>
+        FpsMonitor fpsMonitor;
 
         // Use this for initialization
         void Start ()
         {
+            fpsMonitor = GetComponent<FpsMonitor>();
 
             videoPlayer = GetComponent<VideoPlayer>();
 
             videoPlayer.sendFrameReadyEvents = true;
             videoPlayer.frameReady += FrameReady;
-
             videoPlayer.prepareCompleted += PrepareCompleted;
             videoPlayer.errorReceived += ErrorReceived;
 
@@ -92,6 +97,8 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
             comicFilter = new ComicFilter();
             applyComicFilterToggle.isOn = applyComicFilter;
+
+            OnPlayButtonClick();
 
         }
             
@@ -109,6 +116,10 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
         void OnDestroy ()
         {
+            videoPlayer.sendFrameReadyEvents = false;
+            videoPlayer.frameReady -= FrameReady;
+            videoPlayer.prepareCompleted -= PrepareCompleted;
+            videoPlayer.errorReceived -= ErrorReceived;
 
             if (rgbaMat != null)
                 rgbaMat.Dispose ();
@@ -132,11 +143,12 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// </summary>
         public void OnPlayButtonClick()
         {
-
-            if (!videoPlayer.isPrepared)
+            if (videoPlayer.isPaused)
             {
-                //AsyncGPUReadback.WaitAllRequests();
-
+                videoPlayer.Play();
+            }
+            else
+            {
                 if (rgbaMat != null)
                     rgbaMat.Dispose();
 
@@ -145,9 +157,21 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 videoPlayer.Prepare();
 
                 PlayButton.interactable = false;
+                PauseButton.interactable = true;
                 StopButton.interactable = true;
             }
+        }
 
+        /// <summary>
+        /// Raises the pause button click event.
+        /// </summary>
+        public void OnPauseButtonClick()
+        {
+            videoPlayer.Pause();
+
+            PlayButton.interactable = true;
+            PauseButton.interactable = false;
+            StopButton.interactable = true;
         }
 
         /// <summary>
@@ -159,6 +183,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
             videoPlayer.Stop();
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
         }
 
@@ -178,9 +203,16 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("Video Url: " + vp.url);
             Debug.Log("width: " + vp.width + " height: " + vp.height);
 
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.Add("width", vp.width.ToString());
+                fpsMonitor.Add("height", vp.height.ToString());
+                fpsMonitor.Add("fps", vp.frameRate.ToString());
+                fpsMonitor.consoleText = null;
+            }
+
             int frameWidth = (int)vp.width;
-            int frameHeight = (int)vp.height;
-           
+            int frameHeight = (int)vp.height;          
 
             gameObject.transform.localScale = new Vector3((float)frameWidth, (float)frameHeight, 1);
             float widthScale = (float)Screen.width / (float)frameWidth;
@@ -194,16 +226,12 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 Camera.main.orthographicSize = (float)frameHeight / 2;
             }
 
-
             texture = new Texture2D(frameWidth, frameHeight, TextureFormat.RGBA32, false);
             videoTexture = new Texture2D(frameWidth, frameHeight, TextureFormat.RGBA32, false);
             rgbaMat = new Mat(frameHeight, frameWidth, CvType.CV_8UC4);
 
-
-
             gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
-            // 読込が完了したら再生.
             videoPlayer.Play();
         }
 
@@ -212,18 +240,20 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("ErrorReceived: " + message);
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.consoleText = "ErrorCode: " + message;
+            }
         }
 
         void FrameReady(VideoPlayer vp, long frameIndex)
         {
             //Debug.Log("FrameReady " + frameIndex);
 
-            //AsyncGPUReadback.Request(vp.texture, 0, TextureFormat.RGBA32, (request) => { OnCompleteReadback(request, frameIndex); });
-
             Utils.textureToTexture2D(vp.texture, videoTexture);
 
-            //                Utils.texture2DToMat(videoTexture, rgbaMat);
             Utils.fastTexture2DToMat(videoTexture, rgbaMat);
 
             if (applyComicFilter)
@@ -235,9 +265,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 Imgproc.putText(rgbaMat, "width:" + rgbaMat.width() + " height:" + rgbaMat.height() + " frame:" + videoPlayer.frame, new Point(5, rgbaMat.rows() - 10), Imgproc.FONT_HERSHEY_SIMPLEX, 1.5, new Scalar(255, 0, 0, 255), 5, Imgproc.LINE_AA, false);
             }
 
-            //                Utils.matToTexture2D (rgbaMat, texture, colors);
             Utils.fastMatToTexture2D(rgbaMat, texture);
         }
-
     }
 }

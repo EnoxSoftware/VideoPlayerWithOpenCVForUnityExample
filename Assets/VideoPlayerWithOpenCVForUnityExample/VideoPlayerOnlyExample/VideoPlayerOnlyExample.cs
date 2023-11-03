@@ -1,4 +1,4 @@
-﻿using OpenCVForUnity.CoreModule;
+using OpenCVForUnity.CoreModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.UnityUtils;
 using OpenCVForUnity.UtilsModule;
@@ -24,11 +24,6 @@ namespace VideoPlayerWithOpenCVForUnityExample
         public string VIDEO_FILENAME;
 
         /// <summary>
-        /// The video player.
-        /// </summary>
-        VideoPlayer videoPlayer;
-
-        /// <summary>
         /// The video path input field.
         /// </summary>
         public InputField videoPathInputField;
@@ -39,13 +34,29 @@ namespace VideoPlayerWithOpenCVForUnityExample
         public Button PlayButton;
 
         /// <summary>
+        /// The pause button.
+        /// </summary>
+        public Button PauseButton;
+
+        /// <summary>
         /// The stop button.
         /// </summary>
         public Button StopButton;
 
+        /// <summary>
+        /// The video player.
+        /// </summary>
+        VideoPlayer videoPlayer;
+
+        /// <summary>
+        /// The FPS monitor.
+        /// </summary>
+        FpsMonitor fpsMonitor;
+
         // Use this for initialization
         void Start ()
         {
+            fpsMonitor = GetComponent<FpsMonitor>();
 
             videoPlayer = GetComponent<VideoPlayer>();
 
@@ -55,6 +66,8 @@ namespace VideoPlayerWithOpenCVForUnityExample
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = Application.streamingAssetsPath + "/" + VIDEO_FILENAME;
             videoPathInputField.text = videoPlayer.url;
+
+            OnPlayButtonClick();
 
         }
             
@@ -72,7 +85,8 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
         void OnDestroy ()
         {
-
+            videoPlayer.prepareCompleted -= PrepareCompleted;
+            videoPlayer.errorReceived -= ErrorReceived;
         }
 
         /// <summary>
@@ -90,8 +104,11 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// </summary>
         public void OnPlayButtonClick()
         {
-
-            if (!videoPlayer.isPrepared)
+            if (videoPlayer.isPaused)
+            {
+                videoPlayer.Play();
+            }
+            else
             {
 
                 videoPlayer.url = videoPathInputField.text;
@@ -99,9 +116,21 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 videoPlayer.Prepare();
 
                 PlayButton.interactable = false;
+                PauseButton.interactable = true;
                 StopButton.interactable = true;
             }
+        }
 
+        /// <summary>
+        /// Raises the pause button click event.
+        /// </summary>
+        public void OnPauseButtonClick()
+        {
+            videoPlayer.Pause();
+
+            PlayButton.interactable = true;
+            PauseButton.interactable = false;
+            StopButton.interactable = true;
         }
 
         /// <summary>
@@ -113,6 +142,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
             videoPlayer.Stop();
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
         }
 
@@ -121,9 +151,16 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("Video Url: " + vp.url);
             Debug.Log("width: " + vp.width + " height: " + vp.height);
 
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.Add("width", vp.width.ToString());
+                fpsMonitor.Add("height", vp.height.ToString());
+                fpsMonitor.Add("fps", vp.frameRate.ToString());
+                fpsMonitor.consoleText = null;
+            }
+
             int frameWidth = (int)vp.width;
             int frameHeight = (int)vp.height;
-           
 
             gameObject.transform.localScale = new Vector3((float)frameWidth, (float)frameHeight, 1);
             float widthScale = (float)Screen.width / (float)frameWidth;
@@ -137,11 +174,8 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 Camera.main.orthographicSize = (float)frameHeight / 2;
             }
 
-
-
             gameObject.GetComponent<Renderer>().material.mainTexture = vp.texture;
 
-            // 読込が完了したら再生.
             videoPlayer.Play();
         }
 
@@ -150,7 +184,12 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("ErrorReceived: " + message);
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.consoleText = "ErrorCode: " + message;
+            }
         }
 
     }

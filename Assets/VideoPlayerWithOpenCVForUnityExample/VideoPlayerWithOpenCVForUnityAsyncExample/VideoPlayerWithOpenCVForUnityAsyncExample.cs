@@ -1,9 +1,7 @@
-﻿using OpenCVForUnity.CoreModule;
+using OpenCVForUnity.CoreModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.UnityUtils;
 using OpenCVForUnity.UtilsModule;
-using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -24,21 +22,6 @@ namespace VideoPlayerWithOpenCVForUnityExample
         public string VIDEO_FILENAME;
 
         /// <summary>
-        /// The video player.
-        /// </summary>
-        VideoPlayer videoPlayer;
-
-        /// <summary>
-        /// The rgba mat.
-        /// </summary>
-        Mat rgbaMat;
-
-        /// <summary>
-        /// The texture.
-        /// </summary>
-        Texture2D texture;
-
-        /// <summary>
         /// The video path input field.
         /// </summary>
         public InputField videoPathInputField;
@@ -47,6 +30,11 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// The play button.
         /// </summary>
         public Button PlayButton;
+
+        /// <summary>
+        /// The pause button.
+        /// </summary>
+        public Button PauseButton;
 
         /// <summary>
         /// The stop button.
@@ -64,20 +52,53 @@ namespace VideoPlayerWithOpenCVForUnityExample
         public Toggle applyComicFilterToggle;
 
         /// <summary>
+        /// The video player.
+        /// </summary>
+        VideoPlayer videoPlayer;
+
+        /// <summary>
+        /// The rgba mat.
+        /// </summary>
+        Mat rgbaMat;
+
+        /// <summary>
+        /// The texture.
+        /// </summary>
+        Texture2D texture;
+
+        /// <summary>
         /// comicFilter
         /// </summary>
         ComicFilter comicFilter;
+
+        /// <summary>
+        /// The FPS monitor.
+        /// </summary>
+        FpsMonitor fpsMonitor;
 
 
         // Use this for initialization
         void Start ()
         {
 
+            fpsMonitor = GetComponent<FpsMonitor>();
+
+#if OPENCV_USE_UNSAFE_CODE
+            if (!SystemInfo.supportsAsyncGPUReadback)
+            {
+                Debug.Log("Error : SystemInfo.supportsAsyncGPUReadback is false.");
+                fpsMonitor.consoleText = "Error : SystemInfo.supportsAsyncGPUReadback is false.";
+                PlayButton.interactable = false;
+                StopButton.interactable = false;
+                videoPathInputField.interactable = false;
+                applyComicFilterToggle.interactable = false;
+                return;
+            }
+
             videoPlayer = GetComponent<VideoPlayer>();
 
             videoPlayer.sendFrameReadyEvents = true;
             videoPlayer.frameReady += FrameReady;
-
             videoPlayer.prepareCompleted += PrepareCompleted;
             videoPlayer.errorReceived += ErrorReceived;
 
@@ -87,6 +108,17 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
             comicFilter = new ComicFilter();
             applyComicFilterToggle.isOn = applyComicFilter;
+
+            OnPlayButtonClick();
+#else
+            Debug.Log("Error : Allow 'unsafe' Code is disable. Please enable Allow 'unsafe' Code. [MenuItem]->[Tools]->[OpenCV for Unity]->[Open Setup Tools]->[Enable Use Unsafe Code]");
+            fpsMonitor.consoleText = "Error : Allow 'unsafe' Code is disable. Please enable Allow 'unsafe' Code. [MenuItem]->[Tools]->[OpenCV for Unity]->[Open Setup Tools]->[Enable Use Unsafe Code]";
+            PlayButton.interactable = false;
+            StopButton.interactable = false;
+            videoPathInputField.interactable = false;
+            applyComicFilterToggle.interactable = false;
+            return;
+#endif
         }
             
         // Update is called once per frame
@@ -105,6 +137,11 @@ namespace VideoPlayerWithOpenCVForUnityExample
         {
 
             AsyncGPUReadback.WaitAllRequests();
+
+            videoPlayer.sendFrameReadyEvents = false;
+            videoPlayer.frameReady -= FrameReady;
+            videoPlayer.prepareCompleted -= PrepareCompleted;
+            videoPlayer.errorReceived -= ErrorReceived;
 
             if (rgbaMat != null)
                 rgbaMat.Dispose ();
@@ -128,8 +165,11 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// </summary>
         public void OnPlayButtonClick()
         {
-
-            if (!videoPlayer.isPrepared)
+            if (videoPlayer.isPaused)
+            {
+                videoPlayer.Play();
+            }
+            else
             {
                 AsyncGPUReadback.WaitAllRequests();
 
@@ -141,9 +181,21 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 videoPlayer.Prepare();
 
                 PlayButton.interactable = false;
+                PauseButton.interactable = true;
                 StopButton.interactable = true;
             }
+        }
 
+        /// <summary>
+        /// Raises the pause button click event.
+        /// </summary>
+        public void OnPauseButtonClick()
+        {
+            videoPlayer.Pause();
+
+            PlayButton.interactable = true;
+            PauseButton.interactable = false;
+            StopButton.interactable = true;
         }
 
         /// <summary>
@@ -151,10 +203,10 @@ namespace VideoPlayerWithOpenCVForUnityExample
         /// </summary>
         public void OnStopButtonClick()
         {
-
             videoPlayer.Stop();
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
         }
 
@@ -174,9 +226,16 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("Video Url: " + vp.url);
             Debug.Log("width: " + vp.width + " height: " + vp.height);
 
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.Add("width", vp.width.ToString());
+                fpsMonitor.Add("height", vp.height.ToString());
+                fpsMonitor.Add("fps", vp.frameRate.ToString());
+                fpsMonitor.consoleText = null;
+            }
+
             int frameWidth = (int)vp.width;
-            int frameHeight = (int)vp.height;
-           
+            int frameHeight = (int)vp.height;       
 
             gameObject.transform.localScale = new Vector3((float)frameWidth, (float)frameHeight, 1);
             float widthScale = (float)Screen.width / (float)frameWidth;
@@ -190,15 +249,11 @@ namespace VideoPlayerWithOpenCVForUnityExample
                 Camera.main.orthographicSize = (float)frameHeight / 2;
             }
 
-
             texture = new Texture2D(frameWidth, frameHeight, TextureFormat.RGBA32, false);
             rgbaMat = new Mat(frameHeight, frameWidth, CvType.CV_8UC4);
 
-
-
             gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
-            // 読込が完了したら再生.
             videoPlayer.Play();
         }
 
@@ -207,7 +262,12 @@ namespace VideoPlayerWithOpenCVForUnityExample
             Debug.Log("ErrorReceived: " + message);
 
             PlayButton.interactable = true;
+            PauseButton.interactable = false;
             StopButton.interactable = false;
+            if (fpsMonitor != null)
+            {
+                fpsMonitor.consoleText = "ErrorCode: " + message;
+            }
         }
 
         void FrameReady(VideoPlayer vp, long frameIndex)
@@ -231,8 +291,9 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
                 //Debug.Log("Thread.CurrentThread.ManagedThreadId " + Thread.CurrentThread.ManagedThreadId);
 
-
+#if OPENCV_USE_UNSAFE_CODE
                 MatUtils.copyToMat(request.GetData<byte>(), rgbaMat);
+#endif
 
                 Core.flip(rgbaMat, rgbaMat, 0);
 
@@ -247,14 +308,9 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
                 Utils.fastMatToTexture2D(rgbaMat, texture);
 
-
                 //Debug.Log("End GPU readback done. " + frameIndex);
 
-
-            }
-            
+            }          
         }
-
-
     }
 }

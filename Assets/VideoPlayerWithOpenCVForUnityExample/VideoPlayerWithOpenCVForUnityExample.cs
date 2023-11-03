@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -88,6 +88,40 @@ namespace ARFoundationWithOpenCVForUnityExample
         public void OnVideoPlayerWithOpenCVForUnityAsyncExampleButtonClick()
         {
             SceneManager.LoadScene("VideoPlayerWithOpenCVForUnityAsyncExample");
+        }
+        public void OnVideoPlayerToMatHelperExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoPlayerToMatHelperExample");
+        }
+
+        public void OnFaceDetectionYuNetV2ExampleButtonClick()
+        {
+            SceneManager.LoadScene("FaceDetectionYuNetV2Example");
+        }
+
+        public void OnObjectDetectionYOLOXExampleButtonClick()
+        {
+            SceneManager.LoadScene("ObjectDetectionYOLOXExample");
+        }
+
+        public void OnHandPoseEstimationMediaPipeExampleButtonClick()
+        {
+            SceneManager.LoadScene("HandPoseEstimationMediaPipeExample");
+        }
+
+        public void OnPoseEstimationMediaPipeExampleButtonClick()
+        {
+            SceneManager.LoadScene("PoseEstimationMediaPipeExample");
+        }
+
+        public void OnVideoCaptureTrackingExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoCaptureTrackingExample");
+        }
+
+        public void OnVideoPlayerTrackingExampleButtonClick()
+        {
+            SceneManager.LoadScene("VideoPlayerTrackingExample");
         }
     }
 }
