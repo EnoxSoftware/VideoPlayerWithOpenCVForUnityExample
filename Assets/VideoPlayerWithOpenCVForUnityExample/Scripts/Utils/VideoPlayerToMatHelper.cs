@@ -153,7 +153,7 @@ namespace VideoPlayerWithOpenCVForUnity.UnityUtils.Helper
         public virtual void Initialize()
         {
 
-#if OPENCV_USE_UNSAFE_CODE && !UNITY_WEBGL
+#if OPENCV_USE_UNSAFE_CODE
             useAsyncGPUReadback = SystemInfo.supportsAsyncGPUReadback;
 #else
             useAsyncGPUReadback = false;
