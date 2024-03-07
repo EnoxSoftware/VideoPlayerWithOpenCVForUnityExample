@@ -17,8 +17,8 @@ This example shows how to convert VideoPlayer texture to OpenCV Mat using AsyncG
 
 Environment
 -----
-- Unity 2019.4.31f1+
-- [OpenCV for Unity](https://assetstore.unity.com/packages/tools/integration/opencv-for-unity-21088?aid=1011l4ehR) 2.5.7+
+- Unity 2020.3.48f1+
+- [OpenCV for Unity](https://assetstore.unity.com/packages/tools/integration/opencv-for-unity-21088?aid=1011l4ehR) 2.5.9+
 
 
 Demo

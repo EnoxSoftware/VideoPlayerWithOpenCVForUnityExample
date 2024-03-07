@@ -252,7 +252,9 @@ namespace VideoPlayerWithOpenCVForUnityExample
                                 hands.Add(handpose);
                         }
                         //palmDetector.visualize(img, palms, true, false);
-                        handPoseEstimator.visualize(img, hands, true, false);
+
+                        foreach (var hand in hands)
+                            handPoseEstimator.visualize(img, hand, true, false);
                     }
 
                     gameObject.transform.localScale = new Vector3(img.width(), img.height(), 1);
@@ -418,7 +420,9 @@ namespace VideoPlayerWithOpenCVForUnityExample
                     Imgproc.cvtColor(bgrMat, rgbaMat, Imgproc.COLOR_BGR2RGBA);
 
                     //palmDetector.visualize(rgbaMat, palms, false, true);
-                    handPoseEstimator.visualize(rgbaMat, hands, false, true);
+
+                    foreach (var hand in hands)
+                        handPoseEstimator.visualize(rgbaMat, hand, false, true);
                 }
 
                 Utils.matToTexture2D(rgbaMat, texture);

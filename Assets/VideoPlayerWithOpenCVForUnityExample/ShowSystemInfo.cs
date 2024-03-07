@@ -1,4 +1,4 @@
-﻿using OpenCVForUnity.CoreModule;
+using OpenCVForUnity.CoreModule;
 using OpenCVForUnity.UnityUtils;
 using System;
 using System.Collections.Generic;
@@ -81,8 +81,6 @@ namespace VideoPlayerWithOpenCVForUnityExample
             dict.Add("Build target", "WSA");
 #elif UNITY_WEBGL
             dict.Add("Build target", "WebGL");
-#elif PLATFORM_LUMIN
-            dict.Add("Build target", "LUMIN");
 #else
             dict.Add("Build target", "");
 #endif
@@ -97,7 +95,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
             dict.Add("Scripting backend", "");
 #endif
 
-#if OPENCV_USE_UNSAFE_CODE
+#if !OPENCV_DONT_USE_UNSAFE_CODE
             dict.Add("Allow 'unsafe' Code", "Enabled");
 #else
             dict.Add("Allow 'unsafe' Code", "Disabled");
