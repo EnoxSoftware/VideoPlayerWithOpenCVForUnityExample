@@ -153,7 +153,7 @@ namespace VideoPlayerWithOpenCVForUnity.UnityUtils.Helper
         public virtual void Initialize()
         {
 
-#if OPENCV_USE_UNSAFE_CODE
+#if !OPENCV_DONT_USE_UNSAFE_CODE
             useAsyncGPUReadback = SystemInfo.supportsAsyncGPUReadback;
 #else
             useAsyncGPUReadback = false;
@@ -288,7 +288,7 @@ namespace VideoPlayerWithOpenCVForUnity.UnityUtils.Helper
 
                 //Debug.Log("Thread.CurrentThread.ManagedThreadId " + Thread.CurrentThread.ManagedThreadId);
 
-#if OPENCV_USE_UNSAFE_CODE
+#if !OPENCV_DONT_USE_UNSAFE_CODE
                 MatUtils.copyToMat(request.GetData<byte>(), baseMat);
 #endif
 

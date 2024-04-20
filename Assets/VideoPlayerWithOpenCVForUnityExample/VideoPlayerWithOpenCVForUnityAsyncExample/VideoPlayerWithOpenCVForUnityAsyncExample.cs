@@ -83,7 +83,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
             fpsMonitor = GetComponent<FpsMonitor>();
 
-#if OPENCV_USE_UNSAFE_CODE
+#if !OPENCV_DONT_USE_UNSAFE_CODE
             if (!SystemInfo.supportsAsyncGPUReadback)
             {
                 Debug.Log("Error : SystemInfo.supportsAsyncGPUReadback is false.");
@@ -291,7 +291,7 @@ namespace VideoPlayerWithOpenCVForUnityExample
 
                 //Debug.Log("Thread.CurrentThread.ManagedThreadId " + Thread.CurrentThread.ManagedThreadId);
 
-#if OPENCV_USE_UNSAFE_CODE
+#if !OPENCV_DONT_USE_UNSAFE_CODE
                 MatUtils.copyToMat(request.GetData<byte>(), rgbaMat);
 #endif
 
