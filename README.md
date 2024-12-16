@@ -1,3 +1,8 @@
+# ⚠️ Archived Repository
+
+This repository is no longer maintained or updated.  
+If you want to achieve similar functionality, please use the `UnityVideoPlayer2MatHelper` class included in **OpenCVForUnity version 2.6.4 or later**.  
+
 VideoPlayer With OpenCVForUnity Example
 ====================
 
